@@ -199,7 +199,7 @@ class TsiGlobals:
 
 TsiGlobals.posePlayer_installed = False
 try:
-    import poseplayer
+    from poseplayer import PoseInteraction as APP_PoseInteraction
     TsiGlobals.posePlayer_installed = True
 except:
     pass
