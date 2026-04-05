@@ -2,10 +2,13 @@ import math as pymath
 
 import alarms
 import clock
+import os
 import services
+import teleport_sims_interactions
 import terrain
 import sims
 import sims4
+import traceback
 from build_buy import get_room_id
 from interactions.base.immediate_interaction import ImmediateSuperInteraction
 import routing
@@ -48,49 +51,55 @@ class TsiTeleportBase(ImmediateSuperInteraction, TsiInteractionMixin):
 
 
     def start_teleport(self, to_teleport):
-        self.sim_infos_to_teleport = list()
-        self.rabbit_hole_sim_infos = list()
-        rabbithole_service = services.get_rabbit_hole_service()
+        try:
+            self.sim_infos_to_teleport = list()
+            self.rabbit_hole_sim_infos = list()
+            rabbithole_service = services.get_rabbit_hole_service()
 
-        for id in to_teleport:
-            sim_info = services.sim_info_manager().get(id)
-            if rabbithole_service.is_in_rabbit_hole(sim_info.sim_id):
-                self.rabbit_hole_sim_infos.append(sim_info)
-            else:
-                self.sim_infos_to_teleport.append(sim_info)
-
-        if len(self.rabbit_hole_sim_infos) > 0:
-            rh = {}
-            for si in self.rabbit_hole_sim_infos:
-                rabbithole_display = self.get_localized_string_for_rabbit_hole(si)
-                if rabbithole_display is None:
-                    continue
-
-                if rabbithole_display in rh:
-                    rh[rabbithole_display].append(si)
+            for id in to_teleport:
+                sim_info = services.sim_info_manager().get(id)
+                if rabbithole_service.is_in_rabbit_hole(sim_info.sim_id):
+                    self.rabbit_hole_sim_infos.append(sim_info)
                 else:
-                    rh[rabbithole_display] = list()
-                    rh[rabbithole_display].append(si)
+                    self.sim_infos_to_teleport.append(sim_info)
 
-            text = sims4.localization._create_localized_string(0x0FA95301)
-            for rabbithole in rh.keys():
-                sims = ""
-                for sim_info in rh[rabbithole]:
-                    if sim_info.sim_id == rh[rabbithole][0].sim_id:
-                        sims += str(sim_info.first_name) + " " + str(sim_info.last_name)
+            if len(self.rabbit_hole_sim_infos) > 0:
+                rh = {}
+                for si in self.rabbit_hole_sim_infos:
+                    rabbithole_display = self.get_localized_string_for_rabbit_hole(si)
+                    if rabbithole_display is None:
+                        continue
+
+                    if rabbithole_display in rh:
+                        rh[rabbithole_display].append(si)
                     else:
-                        sims += ", " + str(sim_info.first_name) + " " + str(sim_info.last_name)
+                        rh[rabbithole_display] = list()
+                        rh[rabbithole_display].append(si)
 
-                sims = LocalizationHelperTuning.get_raw_text(sims)
-                rabbithole_text = sims4.localization._create_localized_string(rabbithole._string_id)
-                line = sims4.localization._create_localized_string(0x0FA95302, rabbithole_text, sims)
-                text = sims4.localization.LocalizationHelperTuning.get_separated_string_by_style(ConcatenationStyle.NEW_LINE_SEPARATION, text, LocalizationHelperTuning.get_raw_text(""))
-                text = sims4.localization.LocalizationHelperTuning.get_separated_string_by_style(ConcatenationStyle.NEW_LINE_SEPARATION, text, line)
-            final_text = lambda **_: text
-            dialog = self.get_rabbit_hole_dialog(final_text)
-            dialog.show_dialog(on_response=self.rabbithole_dialog_callback)
-        else:
-            self.teleport_sims()
+                text = sims4.localization._create_localized_string(0x0FA95301)
+                for rabbithole in rh.keys():
+                    sims = ""
+                    for sim_info in rh[rabbithole]:
+                        if sim_info.sim_id == rh[rabbithole][0].sim_id:
+                            sims += str(sim_info.first_name) + " " + str(sim_info.last_name)
+                        else:
+                            sims += ", " + str(sim_info.first_name) + " " + str(sim_info.last_name)
+
+                    sims = LocalizationHelperTuning.get_raw_text(sims)
+                    rabbithole_text = sims4.localization._create_localized_string(rabbithole._string_id)
+                    line = sims4.localization._create_localized_string(0x0FA95302, rabbithole_text, sims)
+                    text = sims4.localization.LocalizationHelperTuning.get_separated_string_by_style(ConcatenationStyle.NEW_LINE_SEPARATION, text, LocalizationHelperTuning.get_raw_text(""))
+                    text = sims4.localization.LocalizationHelperTuning.get_separated_string_by_style(ConcatenationStyle.NEW_LINE_SEPARATION, text, line)
+                final_text = lambda **_: text
+                dialog = self.get_rabbit_hole_dialog(final_text)
+                dialog.show_dialog(on_response=self.rabbithole_dialog_callback)
+            else:
+                self.teleport_sims()
+        except Exception as e:
+            with open(TsiGlobals.get_log_file_path(), "w") as f:
+                f.writelines(traceback.format_exc())
+            raise e
+
 
 
     def get_rabbit_hole_dialog(self, text):

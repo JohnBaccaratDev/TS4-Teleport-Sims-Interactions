@@ -59,14 +59,17 @@ class TsiConfig():
             if type(raw_attr).__name__ == "classproperty":
                 cls._to_export.append(attr)
 
-
     @classmethod
-    def get_config_path(cls):
+    def get_config_path_folder(cls):
         path = os.path.abspath(__file__)
         while not os.path.isdir(path):
             path = os.path.dirname(path)
 
-        return os.path.join(path, "JohnBaccarat_TeleportSimsInteractions.ini")
+        return path
+
+    @classmethod
+    def get_config_path(cls):
+        return os.path.join(cls.get_config_path_folder(), "JohnBaccarat_TeleportSimsInteractions.ini")
 
     @classmethod
     def read_config(cls):

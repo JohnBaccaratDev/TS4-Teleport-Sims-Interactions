@@ -1,3 +1,4 @@
+import os
 import services
 import sims4
 from objects.base_object import BaseObject
@@ -83,3 +84,10 @@ def inject_ZoneManager_update_current_zone(original, self, zone_id):
 
 TsiConfig.get_to_export()
 TsiConfig.read_config()
+
+try:
+    log_file = TsiGlobals.get_log_file_path()
+    if os.path.exists(log_file):
+        os.remove(log_file)
+except:
+    pass

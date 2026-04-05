@@ -1,7 +1,9 @@
 import alarms
+import os
 import services
 import sims
 import sims4
+import teleport_sims_interactions
 from sims4.math import Location, Transform
 import traceback
 from objects import ALL_HIDDEN_REASONS
@@ -29,6 +31,9 @@ class TsiGlobals:
         add_wings_back = list()
         add_wings_back_alarm = None
 
+    @classmethod
+    def get_log_file_path(cls):
+        return os.path.join(teleport_sims_interactions.TsiConfig.get_config_path_folder(), "JohnBaccarat_TeleportSimsInteractions_LOG.txt")
 
     @classmethod
     def any_not_send_back(cls):
@@ -128,7 +133,7 @@ class TsiGlobals:
                 return False
 
             for interaction in sim_instance.get_all_running_and_queued_interactions():
-                if interaction.running and isinstance(interaction, poseplayer.PoseInteraction):
+                if interaction.running and isinstance(interaction, APP_PoseInteraction):
                     return True
 
         def is_in_ww_pose(sim_instance):
